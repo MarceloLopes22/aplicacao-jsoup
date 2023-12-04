@@ -1,18 +1,24 @@
 package com.example.jsoup.services;
 
+import com.example.jsoup.dto.LoginDTO;
 import com.example.jsoup.dto.ResponseDTO;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 @Service
 public class JsoupService {
 
     public static final String URL = "https://pt.wikipedia.org/wiki/Dengue";
+
+    public static final String URL_TJPE = "https://pje.tjpe.jus.br/1g/login.seam";
     private ResponseDTO responseDTO;
     public ResponseEntity<ResponseDTO> ler() {
         try {
@@ -61,5 +67,26 @@ public class JsoupService {
             throw new RuntimeException(e);
         }
         return ResponseEntity.ok(responseDTO);
+    }
+
+    public ResponseEntity<?> login(LoginDTO loginDTO) {
+        HashMap<String,String> loginHashMap = new HashMap<>();
+
+        loginHashMap.put("usarname", loginDTO.getLogin());
+        loginHashMap.put("password", loginDTO.getPassword());
+        Connection.Response doc = null;
+        try {
+            doc = Jsoup.connect(URL_TJPE)
+                    .ignoreContentType(true)
+                    .ignoreHttpErrors(true)
+                    .data(loginHashMap)
+                    .method(Connection.Method.POST)
+                    .execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        return ResponseEntity.ok(doc.statusMessage());
     }
 }
